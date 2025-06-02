@@ -1,6 +1,6 @@
 "use client"
 
-import { type MouseEvent } from 'React'
+import { type MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface IconsParams {
