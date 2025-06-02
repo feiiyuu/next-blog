@@ -1,0 +1,54 @@
+---
+title: flex布局
+date: 2025-03-11
+tags:
+  - flex
+  - 布局
+---
+
+# flex布局
+
+```html
+<div class="flex-container">
+    <div class="flex-itms">A</div>
+    <div class="flex-itms">A</div>
+    <div class="flex-itms">A</div>
+    <div class="flex-itms">A</div>
+    <div class="flex-itms">A</div>
+</div>
+```
+
+## flex Container属性
+
+- flex-direction：定义在当前盒子内部的flex item的排列方向。
+
+  - row(默认值)：横向排列。
+  - colum：垂直排列。
+  - row-reverse：倒转排列顺序。
+  - colum-reverse：倒转排列顺序。
+
+  主轴和交叉轴的概念：
+
+  ​	当flex-direction:row时：
+
+  ​				主轴：row，交叉轴：column
+
+  ​	当flex-direction:colum时：
+
+  ​				主轴：column，交叉轴：row
+
+- justify-content：设置主轴的排列方向。
+
+- align-items：设置交叉轴的排列方向。
+
+- flex-wrap：设置item是否换行。
+
+- align-content：启动换行之后，行与行之间的对齐方式。
+
+## flex Items属性
+
+- order：调整flex item的排列位置。按照从小到大的顺序排列。 
+- align-self：修改当前item的位置。覆盖父元素的justify-content、align-items。
+- flex-basis：设置item的主轴方向的大小。
+- flex-grow：当contaniner主轴方向有剩余空间的时候，item沿着主轴方向扩大的设定。
+- flex-shrink：当item主轴方向的大小总和超过了container的时候，item沿主轴方向缩小的设定。

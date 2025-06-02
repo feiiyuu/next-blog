@@ -1,0 +1,223 @@
+---
+title: React hooks从入门到退学
+date: 2022-01-09 21:06:33
+tags: 
+      - React hooks
+---
+
+# useState
+
+**useState()传入的是默认值，返回一个数组，包含状态值和修改状态值的方法。**
+
+```jsx
+import { useState } from "react";
+function App() {
+  const [count, setCount] = useState(0);
+    // count    为状态值，默认值为0
+    // setCount 为修改count的方法
+  function addCount() {
+    setCount(count + 1);
+  }
+  return (
+    <div>
+      {count}
+      <button onClick={addCount}>+</button>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+# useContext
+
+**多个组件共享状态。**
+
+```jsx
+import React, { useContext } from "react";
+//定义AppContext 在共享状态组件的作用域中才行
+const AppContext = React.createContext();
+
+function ComponentA() {
+    // 使用useContext函数传入AppContext 获取共享的内容
+  const { name } = useContext(AppContext);
+  return (
+    <>
+      <div>我是真的{name}!</div>
+    </>
+  );
+}
+
+function ComponentB() {
+  const { name } = useContext(AppContext);
+  return <div>我才是真的{name}!!!5555...</div>;
+}
+
+export default function App() {
+  return (
+      /*{使用上面定义的AppContext包裹住要共享数据的组件，同时设置要共享的内容}*/
+    <AppContext.Provider value={{ name: "小猪" }}>
+      <ComponentA></ComponentA>
+      <ComponentB></ComponentB>
+    </AppContext.Provider>
+  );
+}
+```
+
+# useReducer
+
+```jsx
+import React, { useReducer } from "react";
+
+export default function App() {
+  //reducer(state,action)=>newstate
+  //reducer 是一个函数，接受当前的state（状态）和action（要进行的操作），计算并返回最新的state
+  //下面的函数state为对象
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case "add":
+        return {
+          ...state, //...运算符https://blog.csdn.net/astonishqft/article/details/82899965
+          count: state.count + 1,
+        };
+      default:
+        return state;
+    }
+  };
+
+  // useReducer接受两个参数，第一个参数为上面的reducer，第二个参数为初始的state值。
+  // 返回值为数组，第一个元素为初始的state，第二个元素为触发reducer的函数dispatch
+  const [state, dispath] = useReducer(reducer, { count: 0 });
+  const addCount = () => dispath({ type: "add" });
+  return (
+    <div>
+      我是组件一
+      {state.count}
+      <button onClick={addCount}>+</button>
+    </div>
+  );
+}
+```
+
+# useContext和useReducer配合使用
+
+**useContext和useReducer一起使用可以达到redux的效果，基本思路如下。**
+
+```jsx
+import React, { createContext,useReducer } from 'react';
+
+export const ColorContext = createContext() //创建context
+
+export const UPDATE_COLOR = "UPDATE_COLOR"
+
+const reducer= (state,action)=>{
+    switch(action.type){
+        case UPDATE_COLOR:
+            return action.color
+        default:
+            return state
+    }
+}
+
+
+export const Color = props=>{
+    const [color,dispatch]=useReducer(reducer,'blue')//创建初始state和dispatch
+    return (
+        <ColorContext.Provider value={{color,dispatch}}>
+            {props.children}
+        </ColorContext.Provider>
+    )
+}
+```
+
+使用Color组件包含住要共享状态的组件，同时将dispath方法一并共享，在组件内部就可以利用dispatch方法修改共享值。
+
+# useEffect
+
+**充当生命周期函数的作用，在组件第一次渲染的时候会执行。**
+
+```jsx
+import React, { useState, useEffect } from "react";
+export default function App() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    console.log("组件渲染了");
+    //do something  类似于ComponentDidMount
+  });
+
+  useEffect(() => {
+    console.log("组件销毁了");
+    //do something  组件销毁的时候会执行
+  }, []);
+
+  useEffect(() => {
+    console.log("loading改变了");
+    // do someting 在loading发生改变的时候触发
+  }, [loading]);
+  const changeLoading = () => {
+    setLoading(!loading);
+  };
+  return (
+    <>
+      <button onClick={changeLoading}>+</button>
+    </>
+  );
+}
+```
+
+# useMemo
+
+**性能优化，父组件状态更新，子组件中的方法会重新执行，带来性能损耗。**
+
+```jsx
+import React, { useState, useMemo } from "react";
+
+const Children = (props) => {
+  function Name() {
+    console.log("一个与父组件无关的子组件被调用");
+    return "我是" + props.name;
+  }
+  // const getName = Name(props);//这样调用，父组件的状态改变该方法会重新执行影响性能
+  const getName = useMemo(() => Name(), [props.name]); //使用useMeo,当props.name改变时才执行
+  return <div>{getName}</div>;
+};
+
+export default function App() {
+  const [pig, setPig] = useState("小猪");
+  const [dog, setDog] = useState("小狗");
+  return (
+    <div>
+      <p>{pig}</p>
+      <br />
+      <button onClick={() => setPig("小狗")}>变成小狗</button>
+      <Children name={dog} />
+    </div>
+  );
+}
+```
+
+# useRef
+
+**获取DOM结点用的。**
+
+```jsx
+import React, { useState, useRef } from "react";
+export default function App() {
+  const [pig, setPig] = useState("小猪");
+  const [dog, setDog] = useState("小狗");
+  const dom = useRef(null);
+  const OpRef = () => {
+    console.log(dom);
+    dom.current.value="你好啊，小猪猪"
+  };
+  return (
+    <div>
+      <input ref={dom} value={pig} readOnly></input>
+      <li>{dog}</li>
+      <button onClick={()=>OpRef()}>看看ref</button>
+    </div>
+  );
+}
+```
+

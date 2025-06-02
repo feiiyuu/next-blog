@@ -1,0 +1,262 @@
+---
+title: 基于官方pythonSDK的支付宝PC端网站支付案例
+date: 2022-02-12 20:15:28
+tags: 
+    - 支付宝 
+    - 官方SDK
+    - python
+---
+# 项目介绍
+
+以下内容基于**python语言、支付宝沙箱环境、官方提供的SDK**，是对PC端网站接入支付宝的小总结。
+
+实现的功能有：
+
+- 在线支付
+- 退款
+
+# 环境配置
+
+## 支付宝沙箱
+
+支付宝沙箱为官方提供的一个虚拟支付环境，能够进行接口调试，且申请无门槛。
+
+### 注册
+
+进入[支付宝开放平台 (alipay.com)](https://openhome.alipay.com/)注册登录，进入沙箱。
+
+**在沙箱应用页面记录下来自己的APPID，后面会用到。**
+
+### 配置密钥
+
+支付宝使用RSA（RSA2）进行签名认证。用户需要生成自己的公钥和私钥，在**沙箱应用—>开发信息**
+
+处填写自己的公钥，同时得到**支付宝公钥**。
+
+官方文档：[如何生成及配置RSA2密钥 (alipay.com)](https://opensupport.alipay.com/support/helpcenter/207/201602469554?ant_source=antsupport)
+
+本文使用python语言，所以生成密钥时格式选择PKCS1。
+
+经过以上步骤获得的参数有：
+
+- APPID
+- 自己的私钥（应用私钥）：app_private_key
+- 支付宝公钥：alipay_public_key
+
+注意：不要将**应用公钥**和**支付宝公钥**混淆。
+
+## 搭建环境
+
+支付宝官方SDK依赖于pycrypto，但是这个库很长时间没有维护了并且在安装过程中还需要VC++的编译，配置起来较为繁琐，此处使用另一个库——pycryptodome，几乎是**旧PyCrypto库的直接替代品‎**‎（官方文档说的...）
+
+[PyCryptodome — PyCryptodome 3.14.1 documentation](https://pycryptodome.readthedocs.io/en/latest/src/introduction.html)。
+
+以下操作推荐在虚拟环境中进行：
+
+```bash
+pip install pycryptodome
+```
+
+安装官方的SDK：
+
+[alipay/alipay-sdk-python-all: 支付宝开放平台 Alipay SDK for Python (github.com)](https://github.com/alipay/alipay-sdk-python-all)
+
+```bash
+pip install alipay-sdk-python==3.3.398
+```
+
+# 创建应用
+
+## 支付
+
+```python
+from alipay.aop.api.AlipayClientConfig import AlipayClientConfig
+from alipay.aop.api.DefaultAlipayClient import DefaultAlipayClient
+from alipay.aop.api.domain.AlipayTradePagePayModel import AlipayTradePagePayModel
+from alipay.aop.api.request.AlipayTradePagePayRequest import AlipayTradePagePayRequest
+
+alipay_client_config = AlipayClientConfig()
+# 支付宝网关，此处填写的为沙箱环境的网关
+alipay_client_config.server_url = 'https://openapi.alipaydev.com/gateway.do'
+# 下面三个分别为APPID、应用私钥（自己生成的那个）、支付宝公钥
+alipay_client_config.app_id = APPID
+alipay_client_config.app_private_key = APP_PRIVATE_KEY
+alipay_client_config.alipay_public_key = ALIPAY_PUBLIC_KEY
+# 自己密钥的加密方式
+alipay_client_config.sign_type = "RSA2"
+# 实例化客户端
+client = DefaultAlipayClient(alipay_client_config)
+
+def alipay_generate_payment_url(out_trade_no, subject, body, total_amount) -> str:
+    """生成支付链接。
+    out_trade_no:订单号
+    subject:订单标题
+    body:订单描述信息
+    total_amount:订单总金额 单位:元
+    goods_detail:list 订单详情
+    """
+    model = AlipayTradePagePayModel()
+    model.out_trade_no = out_trade_no
+    model.subject = subject
+    model.body = body
+    model.total_amount = total_amount
+    model.product_code = "FAST_INSTANT_TRADE_PAY"
+    request = AlipayTradePagePayRequest(biz_model=model)
+    request.notify_url = "https://xxxxxxx"
+    request.return_url = "https://xxxxxxx"
+    # 执行API调用
+    return client.page_execute(request, http_method="GET")
+```
+
+**alipay_generate_payment_url**这个方法（我自己封装的）生成的是支付链接，使用浏览器打开即可进行支付。
+
+在测试时使用支付宝APP沙箱版即可扫码支付。
+
+notify_url：支付宝在收到款后会往这个地址发送一个post请求，包含着支付的重要信息（下面会讲到）。
+
+return_url：支付完成以后前端页面会跳转的地址。get请求，包含一些支付的信息。
+
+更多参数可参考：[统一收单下单并支付页面接口 - 支付宝文档中心 (alipay.com)](https://opendocs.alipay.com/open/028r8t?scene=common)
+
+## 支付成功的回调
+
+下面介绍支付成功以后的处理，对应上面的notify_url参数。
+
+**notify_url为一个公网可以访问到的地址，可以接受到支付宝的POST请求，在验证之后可以进行数据库状态的更新等操作。**
+
+若没有公网IP或者服务器可以使用内网穿透工具，我使用的是[cpolar - 安全的内网穿透工具](https://www.cpolar.com/)的免费账户，足够学习测试使用了，软件没有界面，使用命令行操作。
+
+注册账户。
+
+windows下载安装之后，到安装目录双击cpolae.exe。
+
+使用以下命令登录你的账户：
+
+```bash
+cpolar authtoken <YOUR_AUTHTOKEN>
+```
+
+YOUR_AUTHTOKEN在网页注册之后可以得到。
+
+将本地Web服务器公开到Internet：
+
+```bash
+cpolar http 8000
+```
+
+将本地计算机的端口8000上的Web服务器公开到Internet，成功以后命令框中会有对应的公网域名。
+
+下面以django框架为例，处理支付成功的回调。
+
+```python
+from django.http import HttpResponse
+from alipay.aop.api.util.SignatureUtils import verify_with_rsa, get_sign_content
+from django.views.decorators.http import require_http_methods
+
+@require_http_methods(['POST'])
+def alipay_check_order(request):
+    response = request.POST.dict()
+    sign = response.pop('sign', None)
+    response.pop('sign_type', None)
+    message = get_sign_content(response).encode()
+    status = verify_with_rsa(alipay_public_key, message, sign)
+    if status:
+       	# 更新数据库等操作
+        ....
+        # 支付宝收到该响应后不会重复调用该接口
+        return HttpResponse('success')
+    
+    return HttpResponse('failure')
+
+```
+
+首先进行验签，确定请求来自支付宝官方。因为请求来自支付宝，所以我们需要支付宝公钥进行校验。
+
+参考文档：https://opendocs.alipay.com/open/270/105902
+
+verify_with_rsa、get_sign_content为官方提供的两个方法。
+
+status：布尔类型，验证的结果。
+
+在通过验证之后，必须返回success，原因：
+
+> 每当交易状态改变时，服务器异步通知页面就会收到支付宝发来的处理结果通知，程序执行完后必须打印输出 success，可通过 [云排查](https://opensupport.alipay.com/support/tools/cloudparse) 查询是否返回支付宝 success。
+>
+> 如果商户反馈给支付宝的字符不是 success 这 7 个字符，支付宝服务器会不断重发通知，直到超过 24 小时 22 分钟。一般情况下，25 小时以内完成 8 次通知（通知的间隔频率一般是：4m、10m、1h、2h、6h、15h）
+
+
+
+## 退款
+
+```python
+from alipay.aop.api.AlipayClientConfig import AlipayClientConfig
+from alipay.aop.api.DefaultAlipayClient import DefaultAlipayClient
+
+from alipay.aop.api.domain.AlipayTradeRefundModel import AlipayTradeRefundModel
+from alipay.aop.api.request.AlipayTradeRefundRequest import AlipayTradeRefundRequest
+
+def alipay_refund(out_trade_no, refund_amount, refund_reason=None):
+    """
+    out_trade_no:订单号
+    refund_amount:退款金额
+    refund_reason:退款原因
+    """
+    model = AlipayTradeRefundModel()
+    model.out_trade_no = out_trade_no
+    model.refund_amount = refund_amount
+    model.refund_reason = refund_reason
+    request = AlipayTradeRefundRequest(biz_model=model)
+    response = None
+    try:
+        response = client.execute(request)
+    except Exception:
+        pass
+    return json.loads(response)
+```
+
+调用alipay_refund方法之后，会进行退款操作，然后返回响应结果，类似于：
+
+```json
+{
+    "alipay_trade_fastpay_refund_query_response": {
+        "code": "10000",
+        "msg": "Success",
+        "trade_no": "2014112611001004680073956707",
+        "out_trade_no": "20150320010101001",
+        "out_request_no": "20150320010101001",
+        "refund_reason": "用户退款请求",
+        "total_amount": 100.2,
+        "refund_amount": 12.33,
+        "refund_status": "REFUND_SUCCESS",
+        "refund_royaltys": [
+            {
+                "refund_amount": 10,
+                "royalty_type": "transfer",
+                "result_code": "SUCCESS",
+                "trans_out": "2088102210397302",
+                "trans_out_email": "alipay-test03@alipay.com",
+                "trans_in": "2088102210397302",
+                "trans_in_email": "zen_gwen@hotmail.com"
+            }
+        ],
+        "gmt_refund_pay": "2014-11-27 15:45:57",
+        "refund_detail_item_list": [
+            {
+                "fund_channel": "ALIPAYACCOUNT",
+                "amount": 10,
+                "real_amount": 11.21,
+                "fund_type": "DEBIT_CARD"
+            }
+        ],
+        "send_back_fee": "88",
+        "deposit_back_info": {
+            "has_deposit_back": "true",
+            "dback_status": "S",
+            "dback_amount": 1.01,
+            "bank_ack_time": "2020-06-02 14:03:48",
+            "est_bank_receipt_time": "2020-06-02 14:03:48"
+        }
+    },
+    "sign": "ERITJKEIJKJHKKKKKKKHJEREEEEEEEEEEE"
+}
+```

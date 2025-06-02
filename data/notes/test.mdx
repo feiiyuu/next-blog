@@ -1,0 +1,691 @@
+---
+title: NextJS学习笔记
+date: 2025-04-12
+tags:
+  - Next.js
+---
+
+
+# Next.js学习笔记
+>Next.js 具有同类框架中最佳的“开发人员体验”和许多内置功能。列举其中一些如下：
+>
+>- 直观的、基于页面 的路由系统（并支持动态路由）
+>- 预渲染。支持在页面级的静态生成(SSG) 和 服务器端渲染(SSR)
+>- 自动代码拆分，提升页面加载速度
+>- 具有经过优化的预取功能的客户端路由
+>- 内置 CSS和Sass 的支持，并支持任何CSS-in-JS 库
+>- 开发环境支持快速刷新
+>- 利用 Serverless Functions 及API 路由构建 API 功能
+>- 完全可扩展
+
+## Next.js 入门
+
+### 初始化
+
+```bash
+npx create-next-app nextjs-blog --use-npm --example "https://github.com/vercel/next-learn/tree/master/basics/learn-starter" 
+```
+
+```bash
+cd nextjs-blog
+npm run dev
+```
+
+### 路由系统
+
+Next.js自带路由系统，在Next.js中，一个页面就是”pages“文件夹中一个js文件暴露出的组件。
+
+- `pages/index.js`对应的路由就是`/`
+- `pages/posts/first-post.js`对应的路由就是`/post/first-post`
+- `index.js`指向的是根目录，例如`pages/blog/index.js` ->`/blog`
+
+### Link标签
+
+```javascript
+import Link from "next/link"
+
+export default function FirstPost() {
+  return (
+    <>
+      <h1>First Post</h1>
+      <h2>
+        <Link href="/">
+          <a> Back to home</a>
+        </Link>
+      </h2>
+    </>
+  );
+}
+```
+
+如果使用的是`<a>`标签而不是`<Link>`标签，则在进行路由跳转时浏览器是完全刷新。
+
+### 代码分割和预加载
+
+- ​        Next.js会自动地进行代码分割，每个页面只会加载当前页面所必需的资源。即使你有上百个页面，当前页面也可以很快的加载出来。同时，每个页面是独立的，因此，一个页面出现错误，其他页面仍然可以继续使用。
+- ​        使用`Link`标签包裹的页面，Next.js会自动地进行预加载。（ in production）
+
+### 注意
+
+- 如果要引入当前应用之外的页面则还是使用`<a>`标签
+
+- 如果想要添加`className`等属性，则应添加到`<a>`标签上：
+
+  ```js
+  // Example: Adding className with <Link>
+  import Link from 'next/link'
+  
+  export default function LinkClassnameExample() {
+    // To add attributes like className, target, rel, etc.
+    // add them to the <a> tag, not to the <Link> tag.
+    return (
+      <Link href="/">
+        <a className="foo" target="_blank" rel="noopener noreferrer">
+          Hello World
+        </a>
+      </Link>
+    )
+  }
+  // Take a look at https://nextjs.org/docs/api-reference/next/link
+  // to learn more!
+  ```
+
+### 静态资源、元数据和CSS和Sass
+
+#### 静态资源
+
+静态资源存放在public文件夹下。
+
+Next.js提供了`<img>`标签的拓展组件`Image`，进行了优化巴拉巴拉，只会在用户请求的时候才能去进行响应，所以build的时间不会受到影响。**图片是懒加载的。** 
+
+```js
+import Image from 'next/image'
+
+const YourComponent = () => (
+  <Image
+    src="/images/profile.jpg" // 图片在/public/images/profile.jpg
+    height={144} // Desired size with correct aspect ratio
+    width={144} // Desired size with correct aspect ratio
+    alt="Your Name"
+  />
+)
+```
+
+#### 元数据
+
+对于一个单页面应用来说，如何对不同的路由进行设置不同的`<title>`属性？
+
+Next.js提供了`Head`组件可以对`<title>`进行设置：
+
+```js
+import Head from "next/head";
+
+export default function FirstPost() {
+  return (
+    <>
+      <Head>
+        <title>First Post</title>
+      </Head>
+    </>
+  );
+}
+```
+
+#### 引入第三方的JavaScript代码
+
+- 在`Head`标签里面直接写`script`标签
+
+- Next.js提供了`Script`标签
+
+  ```js
+  import Script from 'next/script'
+  
+  export default function FirstPost() {
+    return (
+      <>
+        <Script
+          src="https://connect.facebook.net/en_US/sdk.js"
+          strategy="lazyOnload"
+          onLoad={() =>
+            console.log(`script loaded correctly, window.FB has been populated`)
+          }
+        />
+      </>
+    );
+  }
+  
+  ```
+
+  - strategy：控制何时应加载第三方脚本。 lazyOnload 的值告诉 Next.js 在浏览器空闲时间延迟加载这个特定的脚本。
+  - onLoad：js加载完之后立即执行的函数。
+
+#### CSS样式
+
+- styled-jsx：在组件（js）里面直接写样式：
+
+  ```js
+  <style jsx>{`
+    …
+  `}</style>
+  ```
+
+- 单个组件外部引入
+
+  Next.js支持[css Modules](https://github.com/css-modules/css-modules)，要使用这种方式，css的文件名必须以`.module.css`结尾。
+
+  ```css
+  /* layout.module.css */
+  .container {
+    max-width: 36rem;
+    padding: 0 1rem;
+    margin: 3rem auto 6rem;
+  }
+  ```
+
+  ```js
+  import styles from "./layout.module.css";
+  export default function Layout({ children }) {
+    return <div className={styles.container}>{children}</div>;
+  }
+  ```
+
+  使用css Modules这种方式，**会自动地生成唯一的类名，因此不需要担心样式冲突的问题。** Next.js也支持按需加载的方式。
+
+- 全局样式
+
+  在`styles/global.css`中：
+
+  ```css
+  a {
+    color: #0070f3;
+    text-decoration: none;
+  }
+  ```
+
+  在`pages/_app.js`中：
+
+  ```js
+  import '../styles/global.css'
+  export default function App({ Component, pageProps }) {
+      return <Component {...pageProps} />
+    }
+  ```
+
+  全局样式就会起作用。
+
+  Next.js同时支持Sass，使用起来与上述类似。
+
+### 预渲染和获取数据
+
+#### 预渲染
+
+Next.js在默认情况下提前对每个页面会进行预渲染，HTML会有一定的结构，而不是完全由客户端的JS来渲染，这有助于SEO。
+
+两种预渲染的方式：
+
+- 静态生成：项目打包的时候生成。
+- SSR（Server-side Rendering）：请求时服务端生成。
+
+在开发环境中使用的是SSR。Next.js允许为每个页面单独设置不同的渲染方式。
+
+如何选择？
+
+Next.js推荐使用静态生成。优点：一经打包可以使用CDN加速，比起SSR更快。
+
+如果页面频繁发生数据变化则应使用SSR，或者使用client-side JavaScript更新数据。
+
+#### 渲染方式
+
+- **SSG**
+
+  ​       实现一个异步函数`getStaticProps`，在build时，可以获取外部的数据作为props发送给页面。（这个函数需要自己实现。。。。）这个函数只能在page中，不能从非page文件中暴露出。
+
+  **在build的时生成页面。**
+
+- **SSR** 
+
+  实现一个异步函数`getServerSideProps`：
+
+  ```js
+  export async function getServerSideProps(context) {
+    return {
+      props: {
+        // props for your component
+      }
+    }
+  }
+  ```
+
+  **在服务器端生成页面。**
+
+- **Client-side Rendering**
+
+  ​         SWR：Next.js强烈建议使用这个工具—>  [用于数据请求的 React Hooks 库 – SWR](https://swr.vercel.app/zh-CN)
+
+  **在客户端生成页面。**
+
+- **ISR**
+
+  增量静态再生 (ISR) 使您能够在每页的基础上使用静态生成，而无需重建整个站点。 使用 ISR，您可以在扩展到数百万页的同时保留静态的优势。
+
+  **工作原理**：每个页面都可以设置超时时间，当请求①发送来的时候，生成的静态页面会起作用。超过超时时间之后，请求②发送过来，静态页面起作用，与此同时，服务端重新生成新的页面。请求③发送过来的时候，新的页面起作用。
+
+  **实现方式：**
+
+  ```jsx
+  // This function gets called at build time on server-side.
+  // It may be called again, on a serverless function, if
+  // revalidation is enabled and a new request comes in
+  export async function getStaticProps() {
+    const res = await fetch('https://.../posts')
+    const posts = await res.json()
+  
+    return {
+      props: {
+        posts,
+      },
+      // Next.js will attempt to re-generate the page:
+      // - When a request comes in
+      // - At most once every 10 seconds
+      revalidate: 10, // In seconds  设置过期时间
+    }
+  }
+  
+  // This function gets called at build time on server-side.
+  // It may be called again, on a serverless function, if
+  // the path has not been generated.
+  export async function getStaticPaths() {
+    const res = await fetch('https://.../posts')
+    const posts = await res.json()
+  
+    // Get the paths we want to pre-render based on posts
+    const paths = posts.map((post) => ({
+      params: { id: post.id },
+    }))
+  
+    // We'll pre-render only these paths at build time.
+    // { fallback: blocking } will server-render pages
+    // on-demand if the path doesn't exist.
+    return { paths, fallback: 'blocking' }
+  }
+  ```
+
+  
+
+### 动态路由
+
+#### 动态路由（client-side）
+
+- 在`pages/posts/`创建`[id].js`文件；(多个参数[...id].js)
+
+- 使用`<Link>`标签进行路由跳转；(`as="/posts/1/2/3"`)
+
+  ```html
+  <Link href="/posts/[id]" as="/posts/1">
+      ...
+  </Link>
+  ```
+
+- 在`[id].js` 获取到id的值；(多参情况下id是数组["1","2","3"])
+
+  ```jsx
+  import {useRouter} from "next/router";
+  const router = useRouter();
+  const id = router.query.id;
+  //或者
+  const {id} = router.query;
+  ```
+
+- 在JavaScript中进行路由的跳转。
+
+  ```js
+  import {useRouter} from "next/router";
+  const router = useRouter();
+  function gotoAnyWhere(){
+      router.push("/posts/[id]","/posts/1");
+      //不需要动态路由时
+      router.push("/post/1");
+  }
+  ```
+
+  **获取路由中的参数：形如：xxx?name="小猪猪"**
+
+  ```js
+  import {useRouter} from "next/router";
+  const name = router.query.name;
+  ```
+
+  ![](https://pic.imgdb.cn/item/61d6eb792ab3f51d9158e4fe.png)
+
+#### API路由
+
+Next.js支持在应用中创建Serverless Function。[Creating API Routes - API Routes | Learn Next.js (nextjs.org)](https://nextjs.org/learn/basics/api-routes/creating-api-routes)
+
+#### 动态路由中的三个方法（SS）
+
+下面这三个方法的名称是固定的，如果在程序中写了这些方法，Next.js会自动地进行相应的操作。
+
+| 获取数据的方法     | 静态化                | 只能在pages文件夹下 | 作用         | 服务端请求 |
+| ------------------ | --------------------- | ------------------- | ------------ | ---------- |
+| getStaticProps     | Static Generation     | 是                  | 请求数据     | 是         |
+| getStaticPaths     | Static Generation     | 是                  | 生成动态路由 | 是         |
+| getServerSideProps | Server-side Rendering | 是                  | 请求数据     | 是         |
+
+getStaticProps：在build时获取数据。
+
+getStaticPaths：根据指定数据生成动态路由。
+
+```jsx
+export async function getStaticPaths() {
+  return {
+    paths: [
+    { params: { id: '1' } },
+    { params: { id: '2' } }
+    ],
+    fallback: true, false, or 'blocking' // See the "fallback" section below
+  };
+}
+```
+
+paths是一个必须返回的数组。相信你能看懂英文！
+
+>The `paths` key determines which paths will be pre-rendered. For example, suppose that you have a page that uses dynamic routes named `pages/posts/[id].js`. If you export `getStaticPaths` from this page and return the following for `paths`
+>
+>Then Next.js will statically generate `posts/1` and `posts/2` at build time using the page component in `pages/posts/[id].js`.
+>
+>Note that the value for each `params` must match the parameters used in the page name:
+>
+>- If the page name is `pages/posts/[postId]/[commentId]`, then `params` should contain `postId` and `commentId`.
+>- If the page name uses catch-all routes, for example `pages/[...slug]`, then `params` should contain `slug` which is an array. For example, if this array is `['foo', 'bar']`, then Next.js will statically generate the page at `/foo/bar`.
+>- If the page uses an optional catch-all route, supply `null`, `[]`, `undefined` or `false` to render the root-most route. For example, if you supply `slug: false` for `pages/[[...slug]]`, Next.js will statically generate the page `/`.
+
+fallback: true, false, or 'blocking'
+
+- false：匹配失败导致404页面。
+
+- true：
+
+  >如果 fallback 为真，那么 getStaticProps 的行为会改变：
+  >
+  >从 getStaticPaths 返回的路径将在构建时由 getStaticProps 呈现为 HTML。
+  >在构建时尚未生成的路径不会导致 404 页面。相反，Next.js 将在对此类路径的第一次请求时提供页面的“后备”版本（有关详细信息，请参阅下面的“后备页面”）。注意：这个“后备”版本不会为像谷歌这样的爬虫提供服务，而是会以阻塞模式呈现路径。
+  >在后台，Next.js 将静态生成请求的路径 HTML 和 JSON。这包括运行 getStaticProps。
+  >完成后，浏览器会收到生成路径的 JSON。这将用于使用所需的道具自动呈现页面。从用户的角度来看，页面将从后备页面切换到完整页面。
+  >同时，Next.js 将此路径添加到预渲染页面列表中。对同一路径的后续请求将为生成的页面提供服务，就像在构建时预渲染的其他页面一样。
+  >
+  >如果您的应用程序有大量依赖数据的静态页面（想想：一个非常大的电子商务网站），这很有用。 您想预渲染所有产品页面，但是您的构建将永远持续下去。
+  >
+  >相反，您可以静态生成一小部分页面并使用 fallback: true 其余部分。 当有人请求尚未生成的页面时，用户将看到带有加载指示器的页面。 不久之后，getStaticProps 完成，页面将使用请求的数据呈现。 从现在开始，每个请求相同页面的人都将获得静态预渲染的页面。
+  >
+  >这可确保用户始终获得快速体验，同时保留快速构建和静态生成的优势。
+  >
+  >fallback: true 不会更新生成的页面，请查看增量静态再生。
+
+- 'blocking':
+
+  >  getStaticPaths 未返回的新路径将等待生成 HTML，与 SSR 相同，然后缓存以供将来的请求使用，因此每个路径仅发生一次。
+  >
+  >  getStaticProps 的行为如下：
+  >
+  >  从 getStaticPaths 返回的路径将在构建时由 getStaticProps 呈现为 HTML。
+  >  在构建时尚未生成的路径不会导致 404 页面。相反，Next.js 将对第一个请求进行 SSR 并返回生成的 HTML。
+  >  完成后，浏览器会收到生成路径的 HTML。从用户的角度来看，它将从“浏览器正在请求页面”过渡到“整个页面已加载”。没有加载/回退状态的闪烁。
+  >  同时，Next.js 将此路径添加到预渲染页面列表中。对同一路径的后续请求将为生成的页面提供服务，就像在构建时预渲染的其他页面一样。
+  >  fallback: 'blocking' 默认不会更新生成的页面。要更新生成的页面，请结合使用ISR。
+
+**以上两个方法在build时可以根据外部数据生成路由和页面，打包后结果如下：**
+
+![](https://pic.imgdb.cn/item/61d958072ab3f51d91fafcbb.png)
+
+getServerSideProps：可以根据每个请求的不同获取数据。
+
+```jsx
+export async function getServerSideProps(context) {
+  return {
+    props: {}, // will be passed to the page component as props
+  }
+}
+```
+
+context 参数是一个包含以下键的对象：
+
+ params：如果该页面使用动态路由，params 包含路由参数。
+
+如果页面名称是 [id].js ，则参数看起来像 `{ id: ... }`。
+
+ req：HTTP IncomingMessage 对象，以及额外的内置解析助手。 
+
+res：HTTP 响应对象。
+
+ query：表示查询字符串的对象。 
+
+preview: 如果页面处于预览模式，则 preview 为 true，否则为 false。
+
+ previewData：setPreviewData设置的预览数据。请参阅预览模式文档。
+
+ resolveUrl：请求 URL 的规范化版本，它去除客户端转换的 _next/data 前缀并包含原始查询值。 区域设置包含活动区域设置（如果您已启用国际化路由）。
+
+ locales 包含所有受支持的语言环境（如果您启用了国际化路由）。 
+
+defaultLocale 包含配置的默认语言环境（如果您启用了国际化路由）。 
+
+getServerSideProps 应该返回一个对象： 
+
+props - 带有将由页面组件接收的道具的可选对象。它应该是可序列化的对象或解析为可序列化对象的 Promise。 
+
+notFound - 允许页面返回 404 状态和页面的可选布尔值。
+
+redirect - 一个可选的重定向值，允许重定向到内部和外部资源。 它应该与 `{destination: string, Permanent: boolean }` 的形状相匹配。 在极少数情况下，您可能需要为旧的 HTTP 客户端分配自定义状态代码才能正确重定向。 在这些情况下，您可以使用 statusCode 属性而不是永久属性，但不能同时使用两者。 您还可以设置 basePath: false 类似于 next.config.js 中的重定向。 
+
+- 三种方法的基本使用
+
+```jsx
+//   posts/case.js  case页面是在服务端渲染出来的
+import Link from "next/link";
+export const fekedata = `
+{
+    "status":200,
+    "data":[
+        {
+            "name":"小猪",
+            "age":18,
+            "slug":"xiao-zhu"
+        },{
+            "name":"小狗",
+            "age":20,
+            "slug":"xiao-gou"
+        }
+    ]
+}
+`;
+//暴露出异步函数getServerSideProps 必须叫这个名字
+export async function getServerSideProps() {
+  // 函数返回一个对象
+  return {
+    // props必须是一个对象，会成为Case组件的props 内部处理
+    props: JSON.parse(fekedata),
+  };
+}
+
+//构建页面的组件
+export default function Case(props) {
+  console.log(props); //此处的props为getServerSideProps返回的props
+  return (
+    <div>
+      {props.data.map((item) => {
+        return (
+          <Link href="/case/[slug]" as={`/case/${item.slug}`} key={item.slug}>
+           {/* <Link>标签中只能包裹一个标签 */}
+            <div>  
+              <a>{item.name}</a>
+              <br />
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+```
+
+```jsx
+// posts/case/[slug].js  在build时就会生成页面
+import { fekedata } from "../case";
+//暴露出异步函数getStaticPaths 再次拿到数据根据参数形成路由
+export async function getStaticPaths() {
+  let res = JSON.parse(fekedata);
+  const paths = res.data.map((item) => ({
+    params: { slug: item.slug },
+  }));
+  return {
+    paths: paths,
+    fallback: false,// 匹配失败404页面
+  };
+}
+
+export async function getStaticProps(context) {
+  console.log(context); //该方法在服务端执行，浏览器中看不到输出结果（dev模式）
+  /**
+   * context为getStaticPaths返回结果，附加一些其他的属性
+   * 可以根据context中不同的slug去请求不同的数据
+   */
+
+  //返回的结果为Demo组件的props
+  return {
+    props: {
+      data: context.params,
+    },
+  };
+}
+
+export default function Demo(props) {
+  console.log(props);
+  return <div>Slug:{props.data.slug}</div>;
+}
+```
+
+**与使用router之间的区别？**
+
+使用router属于client-side JavaScript渲染，而使用这三个函数属于服务端渲染和build时生成，能够生成一定的HTML结构，利于seo。
+
+
+
+### 部署
+
+- 部署在Vercel（无脑操作）。
+
+- 部署在服务器上。
+
+  - 确保项目的`package.json`中包含下列script
+
+    ```json
+    {
+      "scripts": {
+        "dev": "next",
+        "build": "next build",
+        "start": "next start"
+      }
+    }
+    ```
+
+  - 运行`npm run build`会生成.next文件夹。
+
+  - 运行`npm run start`启动nodejs的服务器用来支持服务端渲染。
+
+    >For production Image Optimization with Next.js, the optional 'sharp' package is strongly recommended. Run 'yarn add sharp', and Next.js will use it automatically for Image Optimization.
+
+  - Next.js推荐安装sharp
+
+    ``` bash 
+    npm install sharp -s
+    ```
+
+  - 使用pm2守护进程
+
+    pm2是nodejs的一个带有负载均衡功能的应用进程管理器的模块，用来进行进程管理。
+
+    - 安装pm2
+
+      ```bash
+      npm install pm2 -g
+      ```
+
+    - 相关命令
+
+      启动：
+
+      ```javascript
+      pm2 start app.js
+      pm2 start app.js --name my-api       #my-api为PM2进程名称
+      pm2 start app.js -i 0                #根据CPU核数启动进程个数
+      pm2 start app.js --watch             #实时监控app.js的方式启动，当app.js文件有变动时，pm2会自动reload
+      ```
+
+      查看进程：
+
+      ```javascript
+      pm2 list
+      pm2 show 0 或者 # pm2 info 0         #查看进程详细信息，0为PM2进程id 
+      ```
+
+      监控：
+
+      ```javascript
+      pm2 monit
+      ```
+
+      停止：
+
+      ```javascript
+      pm2 stop all                         #停止PM2列表中所有的进程
+      pm2 stop 0                           #停止PM2列表中进程为0的进程
+      ```
+
+      重载：
+
+      ```javascript
+      pm2 reload all                       #重载PM2列表中所有的进程
+      pm2 reload 0                         #重载PM2列表中进程为0的进程
+      ```
+
+      重启：
+
+      ```javascript
+      pm2 restart all                      #重启PM2列表中所有的进程
+      pm2 restart 0                        #重启PM2列表中进程为0的进程
+      ```
+
+      删除PM2进程：
+
+      ```javascript
+      pm2 delete 0                         #删除PM2列表中进程为0的进程
+      pm2 delete all                       #删除PM2列表中所有的进程
+      ```
+
+      日志操作：
+
+      ```bash
+      pm2 logs [--raw]                     #Display all processes logs in streaming
+      pm2 flush                            #Empty all log file
+      pm2 reloadLogs                       #Reload all logs
+      ```
+
+      升级PM2：
+
+      ```javascript
+      npm install pm2@lastest -g           #安装最新的PM2版本
+      pm2 updatePM2                        #升级pm2
+      ```
+
+      更多命令参数请查看帮助：
+
+      ```javascript
+      pm2 --help
+      ```
+
+    - 使用pm2开启nodejs服务器
+
+      ```bash
+      pm2 start npm -- run start
+      ```

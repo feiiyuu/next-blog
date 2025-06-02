@@ -1,0 +1,27 @@
+perPage: 4
+
+header:
+    -   name: Home
+        path: /
+    - 
+        name: Notes
+        path: notes
+    - 
+        name: About
+        path: about
+
+profile:
+    nickname: 一尊还酹江月🎈丶
+    exp: 半栈工程师 | 还要加油哦~
+    social:
+        github: https://github.com/feiiyuu
+        email: mailto:wangb.edu@gmail.com
+        bilibili: https://space.bilibili.com/99907586
+    info:
+        Identity: 👨‍🎓->🐮🐴......😅
+        Hobby: 🎵/🏃/🎮/🏊‍♂️/🍚
+        Birthday: 2000/07/15
+
+
+home:
+    text: Hi,there.👋 Welcome to my homepage!
