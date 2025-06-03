@@ -82,7 +82,7 @@ export default function Svg() {
                         <feMergeNode in="level1" />
                     </feMerge>
                     <feComposite in="merged" in2="SourceGraphic" operator="in" result="masked" />
-                    <feFlood id="floodHd" floodColor="#166496" result="color" />
+                    <feFlood id="floodHd" floodColor="#000000" result="color" />
                     <feComposite in="color" in2="masked" operator="in" />
                 </filter>
             </defs>
