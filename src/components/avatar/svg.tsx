@@ -6,10 +6,12 @@ export default function Svg() {
     useEffect(() => {
         const floodHd = document.getElementById('floodHd')
         if (floodHd) {
-            if (theme === 'light')
+            if (theme === 'light') {
                 floodHd.setAttribute('flood-color', '#166496')
-            else
+            }
+            else {
                 floodHd.setAttribute('flood-color', '#ffffff')
+            }
         }
     })
     return (

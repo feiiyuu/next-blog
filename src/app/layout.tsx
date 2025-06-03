@@ -12,7 +12,7 @@ export default function RootLayout({
   return (
     <html lang="zh-hans" suppressHydrationWarning>
       <body font='sans' >
-        <ThemeProvider attribute="class">
+        <ThemeProvider attribute="class" defaultTheme='light'>
           <div flex='~ col' min-h='100vh'>
             <Header />
             <div
