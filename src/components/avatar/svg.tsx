@@ -4,8 +4,13 @@ import { useEffect } from 'react'
 export default function Svg() {
     const { theme } = useTheme()
     useEffect(() => {
-        theme === 'light' ? floodHd.setAttribute('flood-color', '#166496') :
-            floodHd.setAttribute('flood-color', '#ffffff')
+        const floodHd = document.getElementById('floodHd')
+        if (floodHd) {
+            if (theme === 'light')
+                floodHd.setAttribute('flood-color', '#166496')
+            else
+                floodHd.setAttribute('flood-color', '#ffffff')
+        }
     })
     return (
         <svg className="svg" x="0" y="0" width="0" height="0">

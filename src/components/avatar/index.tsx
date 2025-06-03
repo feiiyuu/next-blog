@@ -7,8 +7,7 @@ export const Avatar: React.FC = () => {
     const imgRef = useRef<HTMLImageElement>(null)
     useEffect(() => {
         setIsClient(true)
-        imgRef.current && (imgRef.current.style.filter = `url(#half-tone-hd)`)
-    })
+    }, [])
     if (isClient)
         return (
             <div
@@ -16,7 +15,7 @@ export const Avatar: React.FC = () => {
                 overflow='hidden'
             >
                 < Svg />
-                <img ref={imgRef} w='100% md:40vw 2xl:30vw' src="/avtar.jpg" alt="" />
+                <img ref={imgRef} w='100% md:40vw 2xl:30vw' src="/avtar.jpg" alt="" style={{ "filter": 'url(#half-tone-hd)' }} />
             </div>
         )
     else return <div></div>
