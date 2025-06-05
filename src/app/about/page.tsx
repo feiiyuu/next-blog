@@ -11,7 +11,7 @@ export default function About() {
             m='auto'
         >
             <div>
-                11
+
             </div>
             <div
                 border='rounded-2xl'
@@ -41,13 +41,13 @@ export default function About() {
                 <div m='4' flex='~ justify-center' bg='blue-200 dark:cyan-800'>
                     <Icons icons="i-ant-design-github-filled" outerLink={profile?.social.github} size="3xl" />
                     <Icons icons="i-ant-design-bilibili-outlined" outerLink={profile?.social.bilibili} size="3xl" color='#ff6699' />
-                    <Icons icons="i-ant-design-mail-outlined" outerLink={profile?.social.email} size="3xl"  />
+                    <Icons icons="i-ant-design-mail-outlined" outerLink={profile?.social.email} size="3xl" />
                 </div>
                 <ul m='a' w='70%'>
                     {
                         Object.keys(profile?.info ?? {}).map((i) => (
                             <div key={i}>
-                                <li text='left' m='2' >{i}:{profile?.info[i]}</li>
+                                <li text='left' m='2' >{i}：{profile?.info[i]}</li>
                                 <hr />
                             </div>
                         ))

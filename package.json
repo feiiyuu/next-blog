@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./src/scripts/generate-site.mjs && next dev",
-    "build": "next build",
+    "prebuild": "node ./src/scripts/generate-site.mjs",
+    "dev": "npm run prebuild && next dev",
+    "build": "npm run prebuild && next build",
     "start": "next start",
     "lint": "next lint"
   },
