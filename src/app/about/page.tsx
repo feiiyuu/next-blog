@@ -40,8 +40,6 @@ export default function About() {
                 <div text='sm align-center' color='gray' m='2'>{profile?.exp}</div>
                 <div m='4' flex='~ justify-center' bg='blue-200 dark:cyan-800'>
                     <Icons icons="i-ant-design-github-filled" outerLink={profile?.social.github} size="3xl" />
-                    <Icons icons="i-ant-design-bilibili-outlined" outerLink={profile?.social.bilibili} size="3xl" color='#ff6699' />
-                    <Icons icons="i-ant-design-mail-outlined" outerLink={profile?.social.email} size="3xl" />
                 </div>
                 <ul m='a' w='70%'>
                     {

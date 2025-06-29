@@ -22,7 +22,7 @@ export default async function BlogList({ params }: { params: Promise<{ slug: str
       <div m='a' w='90% md:768px' position='relative'>
         <div
           bg="[url(https://img.zaoyue.eu.org/api/bing)] cover"
-          h='200px'
+          h='150px'
           rounded='md'
           className=" dark:brightness-70 brightness-110
           relative before:content-['']

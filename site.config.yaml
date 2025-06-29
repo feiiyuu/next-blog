@@ -1,4 +1,4 @@
-perPage: 4
+perPage: 10
 
 header:
     -   name: Home
@@ -15,10 +15,7 @@ profile:
     exp: 半栈工程师 | 还要加油哦~
     social:
         github: https://github.com/feiiyuu
-        email: mailto:wangb.edu@gmail.com
-        bilibili: https://space.bilibili.com/99907586
     info:
-        身份认证: 👨‍🎓->🐮🐴
         兴趣爱好: 🎵/🏃/🎮/🏊‍♂️
         出身年月: 2000/07/15
 

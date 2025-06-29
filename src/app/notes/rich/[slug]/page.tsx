@@ -43,7 +43,7 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
         w='md:50% xl:250px 2xl:350px'
         max-w='350px'
         p='t-10px r-10px b-10px l-5px'
-        border='solid 1px dark:#1c1c1c zinc-100 rounded-[10px]'
+        border='rounded-[10px]'
         position='fixed bottom-9xl right-2xl xl:top-25vh xl:right-10px'
         max-h='50vh'
         overflow='y-auto'

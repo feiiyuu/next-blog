@@ -9,7 +9,7 @@ export default function NavItem(props: ItemProps) {
     return (
         <Link
             href={props.link}
-            className='p-2 m-1 text-dark dark:text-gray-3 hover:text-dark-9 hover:dark:text-white block w-100% md:w-a text-center'
+            className='p-2 m-1 text-gray-7! dark:text-gray-3! hover:text-dark-9! hover:dark:text-white! block w-100% md:w-a text-center'
         >
             {props.name}
         </Link>
