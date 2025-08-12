@@ -21,10 +21,9 @@ export default async function BlogList({ params }: { params: Promise<{ slug: str
     <div flex='1 ~ col'>
       <div m='a' w='90% md:768px' position='relative'>
         <div
-          bg="[url(https://img.zaoyue.eu.org/api/bing)] cover"
-          h='150px'
+          h='50px'
           rounded='md'
-          className=" dark:brightness-70 brightness-110
+          className="dark:brightness-70 brightness-110
           relative before:content-['']
           before:absolute before:inset-0
            before:bg-gradient-to-b 

@@ -18,7 +18,6 @@ export default function About() {
                 w='300px' h='400px' p='20px'
                 bg='white dark:dark-4'
                 shadow='[0_3px_8px_6px_rgba(7,17,27,0.05)]'
-                hover='bg-opacity-50'
                 transition='all 0.75s'
                 position='relative top-xl md:top-0'
             >

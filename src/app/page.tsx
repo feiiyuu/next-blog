@@ -15,7 +15,11 @@ export default function Home() {
       <div position='relative top-8xl md:static'>
         <Text text={text} />
       </div>
-      <div h='md:[calc(100vh-120px)]' flex='~ justify-center items-center'>
+      <div 
+      h='md:[calc(100vh-200px)]' 
+      flex='~ justify-center items-center'
+      m='b-20'
+      >
         <Avatar />
       </div>
     </div>
